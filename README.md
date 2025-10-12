@@ -6,7 +6,7 @@ Tek bir komutla, binlerce URL'yi analiz ederek size test etmeye hazır, kategori
   
 INSTALLATION:  
 ```
-git clone https://github.com/turgaykara/XSScout.git](https://github.com/turgaykara/1Recon.git)  
+git clone https://github.com/turgaykara/1Recon.git
 cd 1Recon
 
 python3 -m venv myenv
