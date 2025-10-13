@@ -1,9 +1,10 @@
 #!/bin/bash
 
-# Adım 1: Wayback Machine'den URL'leri çek
-# Not: 'example.com' yerine kendi hedef domain'inizi yazın.
-echo "[*] Wayback Machine'den *.example.com için URL'ler çekiliyor..."
-curl "https://web.archive.org/cdx/search/cdx?url=*.example.com/*&collapse=urlkey&output=text&fl=original" > wayback_urls.txt
+echo "Hedef Domain (örn: example.com): "
+read TARGET_DOMAIN
+
+echo "[*] Wayback Machine'den *.$TARGET_DOMAIN için URL'ler çekiliyor..."
+curl "https://web.archive.org/cdx/search/cdx?url=*.$TARGET_DOMAIN/*&collapse=urlkey&output=text&fl=original"
 
 # Adım 2: Çekilen URL'leri 'uro' ile temizle ve eşsizleştir
 cat wayback_urls.txt | uro > waybackUrls.txt
@@ -54,4 +55,5 @@ cat waybackUrls.txt | gf ip > ip_candidates.txt
 cat waybackUrls.txt | gf firebase > firebase_candidates.txt
 
 echo "[*] Tüm taramalar tamamlandı!"
+
 echo "[*] Metodoloji icin: turgaykara.github.io"
