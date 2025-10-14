@@ -1,59 +1,83 @@
 #!/bin/bash
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
 
-echo "Hedef Domain (örn: example.com): "
-read TARGET_DOMAIN
+if [ -n "$1" ]; then
+    TARGET_DOMAIN=$1
+else
+    read -p "Hedef Domain (örn: example.com): " TARGET_DOMAIN
+fi
 
-echo "[*] Wayback Machine'den *.$TARGET_DOMAIN için URL'ler çekiliyor..."
-curl "https://web.archive.org/cdx/search/cdx?url=*.$TARGET_DOMAIN/*&collapse=urlkey&output=text&fl=original"
+if [ -z "$TARGET_DOMAIN" ]; then
+    echo -e "${RED}[-] Hata: Lütfen bir hedef domain girin.${NC}"
+    exit 1
+fi
 
-# Adım 2: Çekilen URL'leri 'uro' ile temizle ve eşsizleştir
+echo -e "${GREEN}[*] Hedef domain: ${YELLOW}$TARGET_DOMAIN${NC}"
+echo -e "${GREEN}[*] Wayback Machine'den *.$TARGET_DOMAIN için URL'ler çekiliyor...${NC}"
+
+curl -s "https://web.archive.org/cdx/search/cdx?url=*.$TARGET_DOMAIN/*&collapse=urlkey&output=text&fl=original" -o wayback_urls.txt
+
+if [ ! -s wayback_urls.txt ]; then
+    echo -e "${RED}[-] Wayback Machine'den hiç URL bulunamadı veya bir hata oluştu. Script durduruluyor.${NC}"
+    exit 1
+fi
+
 cat wayback_urls.txt | uro > waybackUrls.txt
 
-# Adım 3: Artık ihtiyaç duyulmayan ham URL dosyasını sil
 rm wayback_urls.txt
-echo "[*] Toplam $(wc -l < waybackUrls.txt) eşsiz URL bulundu."
+echo -e "${GREEN}[*] Toplam $(wc -l < waybackUrls.txt) eşsiz URL bulundu.${NC}"
 
-# =================================================================
-#               TEMEL VE YÜKSEK ETKİLİ ZAFİYETLER
-# =================================================================
+RESULTS_DIR="results"
+HIGH_IMPACT_DIR="$RESULTS_DIR/temel_zafiyetler"
+INFO_DISC_DIR="$RESULTS_DIR/hassas_veri_kesfi"
 
-# XSS (Cross-Site Scripting) için potansiyel URL'leri bul
-cat waybackUrls.txt | gf xss > xss_candidates.txt
+rm -rf "$RESULTS_DIR"
+mkdir -p "$HIGH_IMPACT_DIR"
+mkdir -p "$INFO_DISC_DIR"
 
-# IDOR (Insecure Direct Object References) için potansiyel URL'leri bul
-cat waybackUrls.txt | gf idor > idor_candidates.txt
+echo "[*] Potansiyel zafiyetler için URL'ler taranıyor..."
+echo "[*] Sonuçlar '$RESULTS_DIR' klasörü altındaki alt klasörlere kaydedilecek."
 
-# SQL Injection için potansiyel URL'leri bul
-cat waybackUrls.txt | gf sqli > sqli_candidates.txt
+# ==============================================================
+#               TEMEL ZAFİYETLER
+# ==============================================================
+echo "[*] 'Temel ve Yüksek Etkili Zafiyetler' taranıyor..."
 
-# SSRF (Server-Side Request Forgery) için potansiyel URL'leri bul
-cat waybackUrls.txt | gf ssrf > ssrf_candidates.txt
+cat waybackUrls.txt | gf xss > "$HIGH_IMPACT_DIR/xss.txt"
+cat waybackUrls.txt | gf idor > "$HIGH_IMPACT_DIR/idor.txt"
+cat waybackUrls.txt | gf sqli > "$HIGH_IMPACT_DIR/sqli.txt"
+cat waybackUrls.txt | gf ssrf > "$HIGH_IMPACT_DIR/ssrf.txt"
+cat waybackUrls.txt | gf redirect > "$HIGH_IMPACT_DIR/redirect.txt"
+cat waybackUrls.txt | gf lfi > "$HIGH_IMPACT_DIR/lfi.txt"
+cat waybackUrls.txt | gf rfi > "$HIGH_IMPACT_DIR/rfi.txt"
 
-# Open Redirect (Açık Yönlendirme) için potansiyel URL'leri bul
-cat waybackUrls.txt | gf redirect > redirect_candidates.txt
+# ==============================================================
+#              HASSAS VERİ KEŞFİ
+# ==============================================================
+echo "[*] 'Bilgi İfşası ve Hassas Veri Keşfi' taranıyor..."
 
-# LFI (Local File Inclusion) için potansiyel URL'leri bul
-cat waybackUrls.txt | gf lfi > lfi_candidates.txt
+cat waybackUrls.txt | gf interestingparams > "$INFO_DISC_DIR/interestingparams.txt"
+cat waybackUrls.txt | gf debug_logic > "$INFO_DISC_DIR/debug_logic.txt"
+cat waybackUrls.txt | gf ip > "$INFO_DISC_DIR/ip_urls.txt"
+cat waybackUrls.txt | gf firebase > "$INFO_DISC_DIR/firebase.txt"
 
-# RFI (Remote File Inclusion) için potansiyel URL'leri bul
-cat waybackUrls.txt | gf rfi > rfi_candidates.txt
+rm waybackUrls.txt
 
-# =================================================================
-#              BİLGİ İFŞASI VE HASSAS VERİ KEŞFİ
-# =================================================================
 
-# İlginç parametreleri (admin, token, secret, api_key vb.) içeren URL'leri bul
-cat waybackUrls.txt | gf interestingparams > interestingparams_candidates.txt
 
-# Hata ayıklama (Debug) parametreleri ve sayfaları için URL'leri bul
-cat waybackUrls.txt | gf debug_logic > debug_logic_candidates.txt
-
-# URL içinde IP adresi barındıran endpoint'leri bul (SSRF için ipucu olabilir)
-cat waybackUrls.txt | gf ip > ip_candidates.txt
-
-# Firebase URL'lerini bul
-cat waybackUrls.txt | gf firebase > firebase_candidates.txt
-
-echo "[*] Tüm taramalar tamamlandı!"
-
+echo -e "\n${GREEN}[*] Tüm taramalar tamamlandı!${NC}"
+echo "[*] Sonuçlar aşağıdaki klasör yapısına göre kaydedildi:"
+echo "└── ${YELLOW}${RESULTS_DIR}${NC}"
+echo "    ├── ${YELLOW}${HIGH_IMPACT_DIR##*/}${NC}"
+echo "    │   ├── xss.txt"
+echo "    │   ├── idor.txt"
+echo "    │   ├── sqli.txt"
+echo "    │   └── ..."
+echo "    └── ${YELLOW}${INFO_DISC_DIR##*/}${NC}"
+echo "        ├── interestingparams.txt"
+echo "        ├── debug_logic.txt"
+echo "        └── ..."
 echo "[*] Metodoloji icin: turgaykara.github.io"
