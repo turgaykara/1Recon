@@ -2,7 +2,7 @@
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 if [ -n "$1" ]; then
     TARGET_DOMAIN=$1
@@ -81,3 +81,4 @@ echo "        ├── interestingparams.txt"
 echo "        ├── debug_logic.txt"
 echo "        └── ..."
 echo "[*] Metodoloji icin: turgaykara.github.io"
+
