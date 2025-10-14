@@ -27,3 +27,19 @@ RUN:
 ```
 bash 1Recon.sh
 ```
+
+---
+  
+SOLUTIONS 4 POSSIBLE PROBLEMS :  
+```
+# 1. Desenlerin tutulacağı ~/.gf dizinini oluştur.
+mkdir -p ~/.gf
+
+# 2. Popüler bir gf desen reposunu klonla
+git clone https://github.com/1ndianl33t/Gf-Patterns.git
+
+# 3. Klonlanan repodaki tüm .json desen dosyalarını ~/.gf dizinine taşı
+mv Gf-Patterns/*.json ~/.gf/
+
+# 4. İndirdiğin gereksiz klasörü temizle
+rm -rf Gf-Patterns
