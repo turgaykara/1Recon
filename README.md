@@ -15,10 +15,11 @@ python3 -m venv myenv
 source myenv/bin/activate
 pip install -r requirements.txt
 
-chmod +x 1Recon.sh
+go install -v github.com/tomnomnom/gf@latest
+go install -v github.com/s0md3v/uro@latest
 
+chmod +x 1Recon.sh
 dos2unix 1Recon.sh
-bash setup.sh
 ```
 
 ---
