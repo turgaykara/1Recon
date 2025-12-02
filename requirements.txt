@@ -1,4 +1,0 @@
-git clone https://github.com/1ndianl33t/Gf-Patterns.git
-cp Gf-Patterns/*.json ~/.gf/
-
-rm -rf Gf-Pattern
