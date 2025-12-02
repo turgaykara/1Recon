@@ -13,7 +13,10 @@ cd 1Recon
 
 python3 -m venv myenv
 source myenv/bin/activate
-pip install -r requirements.txt
+
+git clone https://github.com/1ndianl33t/Gf-Patterns.git
+cp Gf-Patterns/*.json ~/.gf/
+rm -rf Gf-Pattern
 
 go install -v github.com/tomnomnom/gf@latest
 go install -v github.com/s0md3v/uro@latest
